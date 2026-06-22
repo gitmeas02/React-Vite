@@ -6,11 +6,30 @@ on:
   pull_request:
     branches: [uat]
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Which branch to deploy'
+        required: true
+        default: 'uat'
+        type: choice
+        options:
+          - develop
+          - development
+          - uat
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'uat'
+        type: choice
+        options:
+          - develop
+          - development
+          - uat
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: uat
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'uat' }}
     permissions:
       contents: read
     defaults:
@@ -19,9 +38,18 @@ jobs:
     env:
       DEPLOY_URL: ${{ vars.DEPLOY_URL }}
       API_KEY_UAT: ${{ secrets.API_KEY_UAT }}
+      TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref_name }}
+      TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'uat' }}
 
     steps:
-      - name: Checkout
+      - name: Checkout selected branch
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Checkout event branch
+        if: github.event_name != 'workflow_dispatch'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -41,4 +69,4 @@ jobs:
         run: npm run build
 
       - name: Show deployment target
-        run: echo "Deploying to $DEPLOY_URL"
+        run: echo "Deploying branch $TARGET_BRANCH to $TARGET_ENVIRONMENT at $DEPLOY_URL"
