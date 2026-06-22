@@ -21,6 +21,11 @@ on:
         type: choice
         options:
           - uat
+      release_version:
+        description: 'Release version to deploy'
+        required: true
+        default: '1.0.0'
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref }}
@@ -44,6 +49,7 @@ jobs:
       API_KEY_UAT: ${{ secrets.API_KEY_UAT }}
       TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref_name }}
       TARGET_ENVIRONMENT: uat
+      RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.release_version || github.run_number }}
 
     steps:
       - name: Checkout selected branch
@@ -73,4 +79,4 @@ jobs:
         run: npm run build
 
       - name: Show deployment target
-        run: echo "Deploying branch $TARGET_BRANCH to $TARGET_ENVIRONMENT at $DEPLOY_URL"
+        run: echo "Deploying branch $TARGET_BRANCH version $RELEASE_VERSION to $TARGET_ENVIRONMENT at $DEPLOY_URL"
