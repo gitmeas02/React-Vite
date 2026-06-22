@@ -10,11 +10,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: uat
     permissions:
       contents: read
     defaults:
       run:
         working-directory: frontend
+    env:
+      DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+      API_KEY_UAT: ${{ secrets.API_KEY_UAT }}
 
     steps:
       - name: Checkout
@@ -35,3 +39,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Show deployment target
+        run: echo "Deploying to $DEPLOY_URL"
