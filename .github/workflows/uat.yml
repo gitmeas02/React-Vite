@@ -13,8 +13,6 @@ on:
         default: 'uat'
         type: choice
         options:
-          - develop
-          - development
           - uat
       environment:
         description: 'Target environment'
@@ -22,16 +20,22 @@ on:
         default: 'uat'
         type: choice
         options:
-          - develop
-          - development
           - uat
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'uat' }}
+    environment: uat
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
     defaults:
       run:
         working-directory: frontend
@@ -39,7 +43,7 @@ jobs:
       DEPLOY_URL: ${{ vars.DEPLOY_URL }}
       API_KEY_UAT: ${{ secrets.API_KEY_UAT }}
       TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref_name }}
-      TARGET_ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'uat' }}
+      TARGET_ENVIRONMENT: uat
 
     steps:
       - name: Checkout selected branch
@@ -55,7 +59,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
