@@ -1,8 +1,10 @@
-name: frontend-react-vite
+name: frontend-react-vite-development
 
 on:
   push:
+    branches: [development]
   pull_request:
+    branches: [development]
   workflow_dispatch:
 
 jobs:
